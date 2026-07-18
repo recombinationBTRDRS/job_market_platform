@@ -1,0 +1,81 @@
+language: "uk"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  path_instructions:
+    - path: "src/api/**"
+      instructions: |
+        Це FastAPI шар. Перевіряй:
+        - Роутери не містять бізнес-логіки
+        - Всі ендпоінти використовують Pydantic schemas
+        - Dependency injection через Depends()
+        - Правильні HTTP статус коди
+        - Немає прямих звернень до БД минаючи Repository
+
+    - path: "src/services/**"
+      instructions: |
+        Це Service шар — бізнес-логіка.
+        Перевіряй:
+        - Service не містить SQL запитів
+        - Service не знає про HTTP (немає Request/Response)
+        - Залежності приходять через __init__ (DI)
+        - Методи async
+
+    - path: "src/repositories/**"
+      instructions: |
+        Це Repository шар — єдине місце де є SQL.
+        Перевіряй:
+        - Тільки CRUD операції, без бізнес-логіки
+        - Використовується AsyncSession
+        - Немає прямих рядків SQL — тільки SQLAlchemy ORM
+        - Generic BaseRepository наслідується коректно
+
+    - path: "src/etl/**"
+      instructions: |
+        Це ETL Pipeline з Provider Pattern.
+        Перевіряй:
+        - Кожен Provider наслідує BaseProvider
+        - fetch() повертає list[NormalizedVacancy]
+        - Провайдери не залежать один від одного
+        - Normalizer і Deduplicator — окремі класи
+        - Error handling — провайдер не падає весь pipeline
+
+    - path: "src/models/**"
+      instructions: |
+        Це SQLAlchemy 2.0 моделі.
+        Перевіряй:
+        - Використовується Mapped[] і mapped_column()
+        - TimestampMixin підключений де потрібно
+        - Relationships визначені коректно
+        - Немає бізнес-логіки в моделях
+
+    - path: "tests/**"
+      instructions: |
+        Це тести (pytest + pytest-asyncio).
+        Перевіряй:
+        - Unit тести не звертаються до реальної БД
+        - Fixtures визначені в conftest.py
+        - Тести ізольовані один від одного
+        - asyncio_mode = auto використовується
+
+    - path: "src/dags/**"
+      instructions: |
+        Це Airflow DAGs.
+        Перевіряй:
+        - DAG ідемпотентний
+        - Є on_failure_callback
+        - Tasks атомарні
+        - Немає важкої логіки прямо в DAG файлі
+
+  auto_review:
+    enabled: true
+    drafts: false
+
+chat:
+  auto_reply: true
