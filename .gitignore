@@ -17,7 +17,7 @@ __pycache__/
 docker/postgres/data/
 
 # Alembic
-alembic/versions/*.py
+# alembic/versions/*.py
 
 # Coverage
 .coverage
