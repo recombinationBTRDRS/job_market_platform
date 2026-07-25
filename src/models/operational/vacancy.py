@@ -2,7 +2,15 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.base import Base, TimestampMixin
@@ -15,6 +23,13 @@ if TYPE_CHECKING:
 
 class Vacancy(Base, TimestampMixin):
     __tablename__ = "vacancies"
+    __table_args__ = (
+        UniqueConstraint(
+            "external_id",
+            "provider_id",
+            name="uq_vacancy_external_provider",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     external_id: Mapped[str] = mapped_column(String(255), nullable=False)
