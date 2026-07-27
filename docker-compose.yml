@@ -56,9 +56,87 @@ services:
       - job_market_network
     restart: unless-stopped
 
+    airflow-init:
+      image: apache/airflow:2.9.1
+      container_name: job_market_airflow_init
+      environment:
+        AIRFLOW__CORE__EXECUTOR: LocalExecutor
+        AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+        AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+        AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
+        _AIRFLOW_DB_MIGRATE: "true"
+        _AIRFLOW_WWW_USER_CREATE: "true"
+        _AIRFLOW_WWW_USER_USERNAME: admin
+        _AIRFLOW_WWW_USER_PASSWORD: admin
+      volumes:
+        - ./src/dags:/opt/airflow/dags
+        - ./src:/opt/airflow/app/src
+        - airflow_logs:/opt/airflow/logs
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - job_market_network
+      command: version
+      entrypoint: >
+        /bin/bash -c "
+        pip install fastapi sqlalchemy asyncpg alembic pydantic pydantic-settings redis python-jose bcrypt httpx feedparser &&
+        airflow db migrate &&
+        airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@example.com || true
+        "
+
+airflow-webserver:
+  image: apache/airflow:2.9.1
+  container_name: job_market_airflow_webserver
+  environment:
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
+    DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+  volumes:
+    - ./src/dags:/opt/airflow/dags
+    - ./src:/opt/airflow/app/src
+    - airflow_logs:/opt/airflow/logs
+  ports:
+    - "8080:8080"
+  depends_on:
+    postgres:
+      condition: service_healthy
+    airflow-init:
+      condition: service_completed_successfully
+  networks:
+    - job_market_network
+  command: webserver
+  restart: unless-stopped
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.1
+    container_name: job_market_airflow_scheduler
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+    volumes:
+      - ./src/dags:/opt/airflow/dags
+      - ./src:/opt/airflow/app/src
+      - airflow_logs:/opt/airflow/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - job_market_network
+    command: scheduler
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
+  airflow_logs:
 
 networks:
   job_market_network:
