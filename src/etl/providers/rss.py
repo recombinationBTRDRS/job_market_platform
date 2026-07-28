@@ -2,7 +2,7 @@
 import hashlib
 import logging
 import re
-from datetime import UTC, datetime
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 import feedparser
@@ -85,7 +85,7 @@ def parse_published_at(entry: feedparser.FeedParserDict) -> datetime | None:
             return parsedate_to_datetime(entry.published)
         except Exception:
             pass
-    return datetime.now(UTC)
+    return None
 
 
 class RSSProvider(BaseProvider):

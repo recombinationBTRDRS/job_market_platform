@@ -82,7 +82,7 @@ services:
         /bin/bash -c "
         pip install fastapi sqlalchemy asyncpg alembic pydantic pydantic-settings redis python-jose bcrypt httpx feedparser &&
         airflow db migrate &&
-        airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@example.com || true
+        (airflow users create --username admin --password admin --firstname Admin --lastname Admin --role Admin --email admin@example.com || true)
         "
 
 airflow-webserver:
