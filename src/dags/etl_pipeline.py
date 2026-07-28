@@ -47,7 +47,10 @@ def etl_vacancy_pipeline():
     def summarize(results: list[dict]) -> dict:
         total_fetched = sum(r.get("fetched", 0) for r in results)
         total_new = sum(r.get("new", 0) for r in results)
-        total_errors = sum(r.get("errors", 0) for r in results)
+        total_errors = sum(
+            r.get("errors", 0) + (1 if r.get("status") == "error" else 0)
+            for r in results
+        )
         logger.info(
             "ETL Summary: fetched=%d, new=%d, errors=%d",
             total_fetched,
