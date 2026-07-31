@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from src.api.v1.routers.auth import router as auth_router
 from src.core.config import get_settings
 from src.core.exceptions import AppError
 
@@ -14,12 +15,10 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Startup і shutdown логіка."""
     yield
 
 
 def create_app() -> FastAPI:
-    """App factory — створення FastAPI застосунку."""
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -57,6 +56,8 @@ def create_app() -> FastAPI:
             "version": settings.app_version,
             "app": settings.app_name,
         }
+
+    app.include_router(auth_router, prefix="/api/v1")
 
     return app
 
