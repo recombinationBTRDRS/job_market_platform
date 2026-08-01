@@ -8,6 +8,8 @@ from fastapi.responses import JSONResponse
 
 from src.api.v1.routers.auth import router as auth_router
 from src.api.v1.routers.companies import router as companies_router
+from src.api.v1.routers.parse_runs import router as parse_runs_router
+from src.api.v1.routers.providers import router as providers_router
 from src.api.v1.routers.skills import router as skills_router
 from src.api.v1.routers.vacancies import router as vacancies_router
 from src.core.config import get_settings
@@ -64,6 +66,8 @@ def create_app() -> FastAPI:
     app.include_router(vacancies_router, prefix="/api/v1")
     app.include_router(skills_router, prefix="/api/v1")
     app.include_router(companies_router, prefix="/api/v1")
+    app.include_router(providers_router, prefix="/api/v1")
+    app.include_router(parse_runs_router, prefix="/api/v1")
 
     return app
 
