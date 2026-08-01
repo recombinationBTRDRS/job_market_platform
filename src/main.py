@@ -1,9 +1,12 @@
 # src/main.py
+import logging
+import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from src.api.v1.routers.analytics import router as analytics_router
@@ -17,11 +20,14 @@ from src.core.config import get_settings
 from src.core.exceptions import AppError
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
     yield
+    logger.info("Shutting down %s", settings.app_name)
 
 
 def create_app() -> FastAPI:
@@ -41,6 +47,27 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    if not settings.debug:
+        app.add_middleware(
+            TrustedHostMiddleware,
+            allowed_hosts=["*"],
+        )
+
+    @app.middleware("http")
+    async def logging_middleware(request: Request, call_next):
+        start_time = time.monotonic()
+        response = await call_next(request)
+        process_time = time.monotonic() - start_time
+        logger.info(
+            "%s %s %d %.3fs",
+            request.method,
+            request.url.path,
+            response.status_code,
+            process_time,
+        )
+        response.headers["X-Process-Time"] = str(process_time)
+        return response
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
