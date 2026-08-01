@@ -32,14 +32,16 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     session: AsyncSession = Depends(get_db),
 ) -> User:
-    """Отримати поточного авторизованого користувача."""
     if credentials is None:
         raise AuthenticationError(detail="Authorization header missing")
 
-    user_id = get_subject_from_token(credentials.credentials, token_type="access")
+    user_id_str = get_subject_from_token(credentials.credentials, token_type="access")
+
+    if not user_id_str.isdigit():
+        raise AuthenticationError(detail="Invalid token subject")
 
     repo = BaseRepository(model=User, session=session)
-    user = await repo.get_by_id(int(user_id))
+    user = await repo.get_by_id(int(user_id_str))
 
     if user is None:
         raise AuthenticationError(detail="User not found")

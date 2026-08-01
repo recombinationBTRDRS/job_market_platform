@@ -1,4 +1,6 @@
 # src/services/auth.py
+from sqlalchemy.exc import IntegrityError
+
 from src.core.exceptions import AuthenticationError, DuplicateError
 from src.core.security import (
     create_access_token,
@@ -17,25 +19,24 @@ class AuthService:
     def __init__(self, repository: UserRepository) -> None:
         self.repository = repository
 
-    async def register(
-        self,
-        email: str,
-        password: str,
-        full_name: str,
-    ) -> User:
-        """Зареєструвати нового користувача."""
+    async def register(self, email: str, password: str, full_name: str) -> User:
         existing = await self.repository.get_by_email(email)
         if existing is not None:
             raise DuplicateError(detail=f"User with email {email} already exists")
 
         hashed = hash_password(password)
-        return await self.repository.create(
-            email=email,
-            hashed_password=hashed,
-            full_name=full_name,
-            is_active=True,
-            is_admin=False,
-        )
+        try:
+            return await self.repository.create(
+                email=email,
+                hashed_password=hashed,
+                full_name=full_name,
+                is_active=True,
+                is_admin=False,
+            )
+        except IntegrityError as e:
+            raise DuplicateError(
+                detail=f"User with email {email} already exists"
+            ) from e
 
     async def login(self, email: str, password: str) -> dict:
         """Автентифікувати користувача і повернути токени."""

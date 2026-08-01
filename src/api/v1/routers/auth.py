@@ -10,6 +10,7 @@ from src.schemas.auth import (
     RefreshRequest,
     RegisterRequest,
     TokenResponse,
+    UserRead,
 )
 from src.services.auth import AuthService
 
@@ -21,22 +22,24 @@ def get_auth_service(session: AsyncSession = Depends(get_db)) -> AuthService:
     return AuthService(repository=repo)
 
 
-@router.post("/register", status_code=201)
+@router.post("/register", status_code=201, response_model=UserRead)
 async def register(
     body: RegisterRequest,
     service: AuthService = Depends(get_auth_service),
-) -> dict:
-    """Реєстрація нового користувача."""
+) -> UserRead:
     user = await service.register(
         email=body.email,
         password=body.password,
         full_name=body.full_name,
     )
-    return {
-        "id": user.id,
-        "email": user.email,
-        "full_name": user.full_name,
-    }
+    return UserRead.model_validate(user)
+
+
+@router.get("/me", response_model=UserRead)
+async def get_me(
+    current_user: User = Depends(get_current_user),
+) -> UserRead:
+    return UserRead.model_validate(current_user)
 
 
 @router.post("/login")
@@ -60,16 +63,3 @@ async def refresh(
     """Оновлення access token."""
     tokens = await service.refresh(refresh_token=body.refresh_token)
     return TokenResponse(**tokens)
-
-
-@router.get("/me")
-async def get_me(
-    current_user: User = Depends(get_current_user),
-) -> dict:
-    """Отримати дані поточного користувача."""
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "full_name": current_user.full_name,
-        "is_admin": current_user.is_admin,
-    }
