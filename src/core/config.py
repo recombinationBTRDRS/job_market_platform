@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     app_version: str = Field(default="0.1.0")
     debug: bool = Field(default=False)
     secret_key: str = Field(min_length=32)
+    allowed_hosts: list[str] = Field(default=["localhost", "127.0.0.1"])
 
     # Database
     postgres_user: str
