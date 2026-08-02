@@ -1,5 +1,5 @@
 # src/api/v1/routers/companies.py
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.v1.dependencies import get_db
@@ -12,8 +12,8 @@ router = APIRouter(prefix="/companies", tags=["companies"])
 
 @router.get("", response_model=list[CompanyRead])
 async def get_companies(
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=100),
     session: AsyncSession = Depends(get_db),
 ) -> list[CompanyRead]:
     """Отримати список компаній."""

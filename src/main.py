@@ -51,7 +51,7 @@ def create_app() -> FastAPI:
     if not settings.debug:
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=["*"],
+            allowed_hosts=settings.allowed_hosts,
         )
 
     @app.middleware("http")
@@ -59,13 +59,9 @@ def create_app() -> FastAPI:
         start_time = time.monotonic()
         response = await call_next(request)
         process_time = time.monotonic() - start_time
-        logger.info(
-            "%s %s %d %.3fs",
-            request.method,
-            request.url.path,
-            response.status_code,
-            process_time,
-        )
+        method = request.method.replace("\r", "").replace("\n", "")
+        path = request.url.path.replace("\r", "").replace("\n", "")
+        logger.info("%s %s %d %.3fs", method, path, response.status_code, process_time)
         response.headers["X-Process-Time"] = str(process_time)
         return response
 
