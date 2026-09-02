@@ -147,8 +147,12 @@ async def aggregate_salary_by_skill() -> int:
                 {
                     "sid": s.skill_id,
                     "sname": s.skill_name,
-                    "amin": float(s.avg_salary_min) if s.avg_salary_min else None,
-                    "amax": float(s.avg_salary_max) if s.avg_salary_max else None,
+                    "amin": float(s.avg_salary_min)
+                    if s.avg_salary_min is not None
+                    else None,
+                    "amax": float(s.avg_salary_max)
+                    if s.avg_salary_max is not None
+                    else None,
                     "count": s.sample_count,
                 },
             )

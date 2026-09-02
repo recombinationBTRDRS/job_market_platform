@@ -133,7 +133,7 @@ services:
     restart: unless-stopped
 
   superset:
-      image: apache/superset:3.1.0
+      image: apache/superset:3.1.2
       container_name: job_market_superset
       environment:
         SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-superset-secret-key-change-in-production}
