@@ -1,5 +1,6 @@
 # tests/conftest.py
 import asyncio
+import sys
 from collections.abc import AsyncGenerator
 
 import pytest
@@ -17,6 +18,9 @@ from src.models.operational import (
     User,
     Vacancy,
 )
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 settings = get_settings()
 
@@ -37,14 +41,16 @@ TestSessionFactory = async_sessionmaker(
 
 @pytest.fixture(scope="session")
 def event_loop():
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
 
 @pytest_asyncio.fixture(scope="session")
 async def setup_database():
-    """Створити тестові таблиці один раз для сесії."""
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield
@@ -52,11 +58,10 @@ async def setup_database():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function")
 async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
-    """AsyncSession з автоматичним rollback після кожного тесту."""
     async with test_engine.connect() as conn:
-        await conn.begin()
+        await conn.begin_nested()
         session = AsyncSession(bind=conn, expire_on_commit=False)
         try:
             yield session
@@ -67,7 +72,6 @@ async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """Тестовий HTTP клієнт з підміненою БД сесією."""
     from src.api.v1.dependencies import get_db
 
     app = create_app()
@@ -88,7 +92,6 @@ async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
 
 @pytest_asyncio.fixture
 async def test_provider(db_session: AsyncSession) -> Provider:
-    """Fixture — тестовий провайдер."""
     provider = Provider(name="test_provider", type="mock", is_active=True)
     db_session.add(provider)
     await db_session.flush()
@@ -97,7 +100,6 @@ async def test_provider(db_session: AsyncSession) -> Provider:
 
 @pytest_asyncio.fixture
 async def test_company(db_session: AsyncSession) -> Company:
-    """Fixture — тестова компанія."""
     company = Company(name="Test Company")
     db_session.add(company)
     await db_session.flush()
@@ -106,7 +108,6 @@ async def test_company(db_session: AsyncSession) -> Company:
 
 @pytest_asyncio.fixture
 async def test_skill(db_session: AsyncSession) -> Skill:
-    """Fixture — тестовий скіл."""
     skill = Skill(name="Python", normalized_name="python")
     db_session.add(skill)
     await db_session.flush()
@@ -119,7 +120,6 @@ async def test_vacancy(
     test_provider: Provider,
     test_company: Company,
 ) -> Vacancy:
-    """Fixture — тестова вакансія."""
     vacancy = Vacancy(
         external_id="test-001",
         provider_id=test_provider.id,
@@ -139,7 +139,6 @@ async def test_vacancy(
 
 @pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession) -> User:
-    """Fixture — тестовий користувач."""
     from src.core.security import hash_password
 
     user = User(
@@ -156,7 +155,6 @@ async def test_user(db_session: AsyncSession) -> User:
 
 @pytest_asyncio.fixture
 async def admin_user(db_session: AsyncSession) -> User:
-    """Fixture — тестовий адмін."""
     from src.core.security import hash_password
 
     user = User(

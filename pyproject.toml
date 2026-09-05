@@ -60,6 +60,7 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "session"
 
 [tool.coverage.run]
 source = ["src"]
