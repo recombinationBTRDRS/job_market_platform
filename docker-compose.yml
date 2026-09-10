@@ -132,6 +132,28 @@ services:
     command: scheduler
     restart: unless-stopped
 
+  superset:
+      image: apache/superset:3.1.2
+      container_name: job_market_superset
+      environment:
+        SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY:-superset-secret-key-change-in-production}
+        SUPERSET_LOAD_EXAMPLES: "no"
+      ports:
+        - "8088:8088"
+      depends_on:
+        postgres:
+          condition: service_healthy
+      networks:
+        - job_market_network
+      command: >
+        /bin/bash -c "
+        superset db upgrade &&
+        superset fab create-admin --username admin --firstname Admin --lastname Admin --email admin@example.com --password admin || true &&
+        superset init &&
+        superset run -h 0.0.0.0 -p 8088
+        "
+      restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
