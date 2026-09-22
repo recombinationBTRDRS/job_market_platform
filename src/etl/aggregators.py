@@ -2,7 +2,7 @@
 import logging
 from datetime import date
 
-from sqlalchemy import func, select, text
+from sqlalchemy import func, or_, select, text
 
 from src.db.session import AsyncSessionFactory
 from src.models.operational.company import Company
@@ -87,7 +87,13 @@ async def aggregate_skills_daily(target_date: date) -> int:
             )
             .join(VacancySkill, Skill.id == VacancySkill.skill_id)
             .join(Vacancy, VacancySkill.vacancy_id == Vacancy.id)
-            .where(Vacancy.is_active == True)  # noqa: E712
+            .where(
+                Vacancy.is_active == True,  # noqa: E712
+                or_(
+                    Vacancy.salary_min.isnot(None),
+                    Vacancy.salary_max.isnot(None),
+                ),
+            )
             .group_by(Skill.id, Skill.name)
         )
         skills = result.all()
@@ -129,7 +135,13 @@ async def aggregate_salary_by_skill() -> int:
             )
             .join(VacancySkill, Skill.id == VacancySkill.skill_id)
             .join(Vacancy, VacancySkill.vacancy_id == Vacancy.id)
-            .where(Vacancy.is_active == True, Vacancy.salary_min.isnot(None))  # noqa: E712
+            .where(
+                Vacancy.is_active == True,  # noqa: E712
+                or_(
+                    Vacancy.salary_min.isnot(None),
+                    Vacancy.salary_max.isnot(None),
+                ),
+            )
             .group_by(Skill.id, Skill.name)
             .having(func.count(Vacancy.id) >= 3)
         )

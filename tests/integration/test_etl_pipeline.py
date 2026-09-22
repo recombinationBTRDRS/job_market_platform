@@ -108,21 +108,27 @@ async def test_loader_handles_error_gracefully(
     """Тест що помилка в одній вакансії не зупиняє батч."""
     from src.etl.providers.base import NormalizedVacancy
 
-    vacancies = [
-        NormalizedVacancy(
-            external_id="good-001",
-            title="Good Vacancy",
-            url="https://test.com/good",
-        ),
-        NormalizedVacancy(
-            external_id="good-002",
-            title="Another Good Vacancy",
-            url="https://test.com/good2",
-        ),
-    ]
+    valid_vacancy = NormalizedVacancy(
+        external_id="good-001",
+        title="Good Vacancy",
+        url="https://test.com/good",
+    )
 
     loader = VacancyLoader(session=db_session, provider_id=test_provider.id)
-    success, errors = await loader.load(vacancies)
+    success1, _ = await loader.load([valid_vacancy])
+    assert success1 == 1
 
+    duplicate = NormalizedVacancy(
+        external_id="good-001",
+        title="Duplicate",
+        url="https://test.com/good",
+    )
+    another_valid = NormalizedVacancy(
+        external_id="good-002",
+        title="Another Good",
+        url="https://test.com/good2",
+    )
+
+    success, errors = await loader.load([valid_vacancy, duplicate, another_valid])
     assert success == 2
-    assert errors == 0
+    assert errors == 1

@@ -49,34 +49,34 @@ class VacancyLoader:
     ) -> Vacancy | None:
         """Завантажити одну вакансію з компанією і скілами."""
         try:
-            company_id = await self._get_or_create_company(normalized.company_name)
-            skill_ids = await self._get_or_create_skills(normalized.skills)
+            async with self.session.begin_nested():
+                company_id = await self._get_or_create_company(normalized.company_name)
+                skill_ids = await self._get_or_create_skills(normalized.skills)
 
-            vacancy = await self.vacancy_repo.create(
-                external_id=normalized.external_id,
-                provider_id=self.provider_id,
-                company_id=company_id,
-                url=normalized.url,
-                title=normalized.title,
-                description=normalized.description,
-                salary_min=normalized.salary_min,
-                salary_max=normalized.salary_max,
-                salary_currency=normalized.salary_currency,
-                employment_type=normalized.employment_type,
-                remote_type=normalized.remote_type,
-                published_at=normalized.published_at,
-                is_active=True,
-            )
-
-            for skill_id in skill_ids:
-                vacancy_skill = VacancySkill(
-                    vacancy_id=vacancy.id,
-                    skill_id=skill_id,
+                vacancy = await self.vacancy_repo.create(
+                    external_id=normalized.external_id,
+                    provider_id=self.provider_id,
+                    company_id=company_id,
+                    url=normalized.url,
+                    title=normalized.title,
+                    description=normalized.description,
+                    salary_min=normalized.salary_min,
+                    salary_max=normalized.salary_max,
+                    salary_currency=normalized.salary_currency,
+                    employment_type=normalized.employment_type,
+                    remote_type=normalized.remote_type,
+                    published_at=normalized.published_at,
+                    is_active=True,
                 )
-                self.session.add(vacancy_skill)
 
-            await self.session.flush()
-            return vacancy
+                for skill_id in skill_ids:
+                    vacancy_skill = VacancySkill(
+                        vacancy_id=vacancy.id,
+                        skill_id=skill_id,
+                    )
+                    self.session.add(vacancy_skill)
+
+                return vacancy
 
         except Exception as e:
             logger.error(
