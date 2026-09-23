@@ -18,6 +18,7 @@ from src.api.v1.routers.skills import router as skills_router
 from src.api.v1.routers.vacancies import router as vacancies_router
 from src.core.config import get_settings
 from src.core.exceptions import AppError
+from src.core.logging import setup_logging
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    setup_logging(debug=settings.debug)
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
     yield
     logger.info("Shutting down %s", settings.app_name)
