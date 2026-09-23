@@ -82,11 +82,41 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["system"])
     async def health_check() -> dict:
-        return {
+        """Перевірка статусу всіх сервісів."""
+        from sqlalchemy import text
+
+        from src.db.session import engine
+
+        health = {
             "status": "ok",
             "version": settings.app_version,
             "app": settings.app_name,
+            "services": {
+                "postgres": "unknown",
+                "redis": "unknown",
+            },
         }
+
+        try:
+            async with engine.connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            health["services"]["postgres"] = "ok"
+        except Exception as e:
+            health["services"]["postgres"] = f"error: {e}"
+            health["status"] = "degraded"
+
+        try:
+            import redis.asyncio as aioredis
+
+            r = aioredis.from_url(str(settings.redis_url))
+            await r.ping()
+            await r.aclose()
+            health["services"]["redis"] = "ok"
+        except Exception as e:
+            health["services"]["redis"] = f"error: {e}"
+            health["status"] = "degraded"
+
+        return health
 
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(vacancies_router, prefix="/api/v1")
