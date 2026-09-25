@@ -29,47 +29,44 @@ TEST_DATABASE_URL = str(settings.database_url).replace(
     "/test_job_market_db",
 )
 
-test_engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-TestSessionFactory = async_sessionmaker(
-    bind=test_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
 
-
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def event_loop():
-    import asyncio
-
-    policy = asyncio.DefaultEventLoopPolicy()
-    loop = policy.new_event_loop()
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
     yield loop
     loop.close()
 
 
-@pytest_asyncio.fixture(scope="session")
-async def setup_database():
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
-
 @pytest_asyncio.fixture(scope="function")
-async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
-    """AsyncSession з автоматичним rollback після кожного тесту."""
-    async with TestSessionFactory() as session:
+async def db_session() -> AsyncGenerator[AsyncSession, None]:
+    """AsyncSession для кожного тесту — окремий engine і сесія."""
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    session_factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
+
+    async with session_factory() as session:
         try:
             yield session
         finally:
             await session.rollback()
-            await session.close()
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+    await engine.dispose()
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture(scope="function")
 async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     from src.api.v1.dependencies import get_db
 
