@@ -19,9 +19,12 @@ dependencies = [
     "python-jose[cryptography] (>=3.5.0,<4.0.0)",
     "httpx (>=0.28.1,<0.29.0)",
     "feedparser (>=6.0.12,<7.0.0)",
-    "bcrypt (>=5.0.0,<6.0.0)"
+    "bcrypt (>=5.0.0,<6.0.0)",
+    "structlog (>=26.1.0,<27.0.0)"
 ]
 
+[tool.poetry]
+package-mode = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -60,7 +63,6 @@ disallow_untyped_defs = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-asyncio_default_fixture_loop_scope = "session"
 
 [tool.coverage.run]
 source = ["src"]
