@@ -41,10 +41,10 @@ TestSessionFactory = async_sessionmaker(
 
 @pytest.fixture(scope="session")
 def event_loop():
-    if sys.platform == "win32":
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    import asyncio
+
+    policy = asyncio.DefaultEventLoopPolicy()
+    loop = policy.new_event_loop()
     yield loop
     loop.close()
 
@@ -60,14 +60,13 @@ async def setup_database():
 
 @pytest_asyncio.fixture(scope="function")
 async def db_session(setup_database) -> AsyncGenerator[AsyncSession, None]:
-    async with test_engine.connect() as conn:
-        await conn.begin_nested()
-        session = AsyncSession(bind=conn, expire_on_commit=False)
+    """AsyncSession з автоматичним rollback після кожного тесту."""
+    async with TestSessionFactory() as session:
         try:
             yield session
         finally:
+            await session.rollback()
             await session.close()
-            await conn.rollback()
 
 
 @pytest_asyncio.fixture
