@@ -61,7 +61,7 @@ services:
     container_name: job_market_airflow_init
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/airflow_db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
       _AIRFLOW_DB_MIGRATE: "true"
@@ -89,7 +89,7 @@ services:
     container_name: job_market_airflow_webserver
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/airflow_db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
@@ -114,7 +114,7 @@ services:
     container_name: job_market_airflow_scheduler
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/airflow_db
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-zDmVnGEzUVwquJRYkBOC7VIL8LVPUQ8VJR1RPKGPgWM=}
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-job_market_user}:${POSTGRES_PASSWORD:-job_market_pass}@postgres:5432/${POSTGRES_DB:-job_market_db}
