@@ -289,6 +289,21 @@ job_market_platform/
 - [ ] Додаткові провайдери — LinkedIn (якщо дозволить TOS)
 - [ ] User-агент ротація для production скрапінгу
 
+## 📸 Screenshots
+
+### API Documentation (Swagger UI)
+![Swagger UI](docs/screenshots/swagger_ui.png)
+
+### Vacancies API Response
+![Vacancies API](docs/screenshots/vacancies_api.png)
+
+### Top Skills Analytics
+![Top Skills](docs/screenshots/skills_top.png)
+
+### Health Check
+![Health Check](docs/screenshots/health_check.png)
+
+
 ## 👨‍💻 Автор
 
 **Vitalii** — Junior Data Platform Engineer
