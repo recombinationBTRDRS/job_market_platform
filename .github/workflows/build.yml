@@ -1,0 +1,36 @@
+# .github/workflows/build.yml
+name: Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: false
+          tags: job-market-platform:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Test docker-compose config
+        run: |
+          cp .env.example .env
+          echo "SECRET_KEY=test-secret-key-for-ci-minimum-32-characters" >> .env
+          echo "JWT_SECRET_KEY=test-jwt-secret-key-for-ci-minimum-32-chars" >> .env
+          echo "SUPERSET_SECRET_KEY=test-superset-secret-key-for-ci-only" >> .env
+          docker compose config

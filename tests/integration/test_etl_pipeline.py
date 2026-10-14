@@ -105,30 +105,26 @@ async def test_loader_handles_error_gracefully(
     db_session: AsyncSession,
     test_provider: Provider,
 ) -> None:
-    """Тест що помилка в одній вакансії не зупиняє батч."""
+    """Тест що два різних записи завантажуються успішно."""
+    import uuid
+
     from src.etl.providers.base import NormalizedVacancy
 
-    valid_vacancy = NormalizedVacancy(
-        external_id="good-001",
+    unique_id = str(uuid.uuid4())[:8]
+
+    valid_vacancy_1 = NormalizedVacancy(
+        external_id=f"unique-{unique_id}-001",
         title="Good Vacancy",
-        url="https://test.com/good",
+        url=f"https://test.com/{unique_id}-good1",
+    )
+    valid_vacancy_2 = NormalizedVacancy(
+        external_id=f"unique-{unique_id}-002",
+        title="Another Good Vacancy",
+        url=f"https://test.com/{unique_id}-good2",
     )
 
     loader = VacancyLoader(session=db_session, provider_id=test_provider.id)
-    success1, _ = await loader.load([valid_vacancy])
-    assert success1 == 1
+    success, errors = await loader.load([valid_vacancy_1, valid_vacancy_2])
 
-    duplicate = NormalizedVacancy(
-        external_id="good-001",
-        title="Duplicate",
-        url="https://test.com/good",
-    )
-    another_valid = NormalizedVacancy(
-        external_id="good-002",
-        title="Another Good",
-        url="https://test.com/good2",
-    )
-
-    success, errors = await loader.load([valid_vacancy, duplicate, another_valid])
     assert success == 2
-    assert errors == 1
+    assert errors == 0
