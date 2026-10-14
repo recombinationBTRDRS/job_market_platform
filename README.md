@@ -50,31 +50,23 @@ GET /api/v1/vacancies?remote_type=remote&salary_min=2000
 
 ## 🏗️ Архітектура
 
-┌─────────────────────────────────────────────────────┐
-│ Data Sources │
-│ DOU.ua │ Work.ua │ Robota.ua │ Djinni.co │
-└────────────────────┬────────────────────────────────┘
-│ RSS Feeds
-▼
-┌─────────────────────────────────────────────────────┐
-│ ETL Pipeline (Airflow) │
-│ Extract → Normalize → Deduplicate → Load │
-└────────────────────┬────────────────────────────────┘
-│
-┌──────────┴──────────┐
-▼ ▼
-┌─────────────────┐ ┌──────────────────┐
-│ Operational DB │ │ Analytical DB │
-│ (PostgreSQL) │──▶│ (PostgreSQL) │
-│ OLTP схема │ │ analytics.* │
-└─────────────────┘ └────────┬─────────┘
-│ │
-▼ ▼
-┌─────────────────┐ ┌──────────────────┐
-│ FastAPI │ │ Superset │
-│ REST API │ │ Дашборди │
-└─────────────────┘ └──────────────────┘
+```mermaid
+graph TD
+    A[DOU.ua RSS] --> E
+    B[Work.ua RSS] --> E
+    C[Robota.ua RSS] --> E
+    D[Djinni.co RSS] --> E
 
+    E[ETL Pipeline - Airflow] --> F
+    E --> G
+
+    F[Operational DB\nPostgreSQL OLTP] --> H
+    G[Analytical DB\nPostgreSQL analytics.*]
+
+    H[FastAPI REST API]
+    F --> G
+    G --> I[Superset Дашборди]
+```
 
 ## 🛠️ Стек технологій
 
