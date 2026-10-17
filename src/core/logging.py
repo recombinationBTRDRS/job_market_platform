@@ -1,6 +1,8 @@
 # src/core/logging.py
 import logging
 import sys
+from collections.abc import Callable
+from typing import Any
 
 import structlog
 
@@ -8,13 +10,14 @@ import structlog
 def setup_logging(debug: bool = False) -> None:
     """Налаштувати structlog для production або dev режиму."""
 
-    shared_processors = [
+    shared_processors: list[Callable[..., Any]] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
         structlog.processors.StackInfoRenderer(),
     ]
 
+    processors: list[Callable[..., Any]]
     if debug:
         processors = [
             *shared_processors,

@@ -3,8 +3,9 @@ import logging
 import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
@@ -57,9 +58,9 @@ def create_app() -> FastAPI:
         )
 
     @app.middleware("http")
-    async def logging_middleware(request: Request, call_next):
+    async def logging_middleware(request: Request, call_next: Any) -> Response:
         start_time = time.monotonic()
-        response = await call_next(request)
+        response: Response = await call_next(request)
         process_time = time.monotonic() - start_time
         method = request.method.replace("\r", "").replace("\n", "")
         path = request.url.path.replace("\r", "").replace("\n", "")
@@ -100,9 +101,9 @@ def create_app() -> FastAPI:
         try:
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
-            health["services"]["postgres"] = "ok"
+            health["services"]["postgres"] = "ok"  # type: ignore[index]
         except Exception as e:
-            health["services"]["postgres"] = f"error: {e}"
+            health["services"]["postgres"] = f"error: {e}"  # type: ignore[index]
             health["status"] = "degraded"
 
         try:
@@ -111,9 +112,9 @@ def create_app() -> FastAPI:
             r = aioredis.from_url(str(settings.redis_url))
             await r.ping()
             await r.aclose()
-            health["services"]["redis"] = "ok"
+            health["services"]["redis"] = "ok"  # type: ignore[index]
         except Exception as e:
-            health["services"]["redis"] = f"error: {e}"
+            health["services"]["redis"] = f"error: {e}"  # type: ignore[index]
             health["status"] = "degraded"
 
         return health
