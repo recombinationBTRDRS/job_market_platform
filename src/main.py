@@ -54,7 +54,7 @@ def create_app() -> FastAPI:
     if not settings.debug:
         app.add_middleware(
             TrustedHostMiddleware,
-            allowed_hosts=settings.allowed_hosts,
+            allowed_hosts=settings.allowed_hosts + ["test", "testserver"],
         )
 
     @app.middleware("http")
