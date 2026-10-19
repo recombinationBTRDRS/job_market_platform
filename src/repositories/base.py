@@ -17,25 +17,18 @@ class BaseRepository(Generic[ModelType]):
         self.session = session
 
     async def get_by_id(self, id: int) -> ModelType | None:
-        """Отримати запис по ID."""
         result = await self.session.execute(
-            select(self.model).where(self.model.id == id)
+            select(self.model).where(self.model.id == id)  # type: ignore[attr-defined]
         )
         return result.scalar_one_or_none()
 
-    async def get_all(
-        self,
-        skip: int = 0,
-        limit: int = 100,
-    ) -> list[ModelType]:
-        """Отримати всі записи з пагінацією."""
+    async def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
         result = await self.session.execute(
             select(self.model).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
 
     async def create(self, **kwargs: Any) -> ModelType:
-        """Створити новий запис."""
         instance = self.model(**kwargs)
         self.session.add(instance)
         await self.session.flush()
@@ -43,7 +36,6 @@ class BaseRepository(Generic[ModelType]):
         return instance
 
     async def update(self, id: int, **kwargs: Any) -> ModelType | None:
-        """Оновити запис по ID."""
         instance = await self.get_by_id(id)
         if instance is None:
             return None
@@ -54,7 +46,6 @@ class BaseRepository(Generic[ModelType]):
         return instance
 
     async def delete(self, id: int) -> bool:
-        """Видалити запис по ID. Повертає True якщо видалено."""
         instance = await self.get_by_id(id)
         if instance is None:
             return False
@@ -63,7 +54,6 @@ class BaseRepository(Generic[ModelType]):
         return True
 
     async def count(self) -> int:
-        """Порахувати кількість записів."""
         from sqlalchemy import func
 
         result = await self.session.execute(

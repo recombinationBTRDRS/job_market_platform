@@ -1,5 +1,6 @@
 # src/etl/providers/mock.py
 from datetime import UTC, datetime
+from typing import Any
 
 from src.etl.providers.base import BaseProvider, NormalizedVacancy
 
@@ -10,7 +11,7 @@ class MockProvider(BaseProvider):
     name = "mock"
     provider_type = "mock"
 
-    MOCK_VACANCIES = [
+    MOCK_VACANCIES: list[dict[str, Any]] = [
         {
             "external_id": "mock-001",
             "title": "Senior Python Developer",
